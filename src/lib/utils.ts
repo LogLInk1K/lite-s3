@@ -1,0 +1,73 @@
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+export function formatBytes(bytes: number, decimals = 2) {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+}
+
+export function formatDate(date: Date | string) {
+  const d = new Date(date);
+  return d.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export function getFileExtension(key: string) {
+  const parts = key.split(".");
+  return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : "";
+}
+
+export function getFileName(key: string) {
+  const parts = key.split("/");
+  return parts[parts.length - 1] || parts[parts.length - 2];
+}
+
+export function isImageFile(key: string) {
+  const ext = getFileExtension(key);
+  return ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext);
+}
+
+export function isVideoFile(key: string) {
+  const ext = getFileExtension(key);
+  return ["mp4", "webm", "ogg", "mov", "avi"].includes(ext);
+}
+
+export function isAudioFile(key: string) {
+  const ext = getFileExtension(key);
+  return ["mp3", "wav", "ogg", "flac", "aac", "m4a"].includes(ext);
+}
+
+export function isCodeFile(key: string) {
+  const ext = getFileExtension(key);
+  return [
+    "js", "jsx", "ts", "tsx", "py", "rb", "go", "rs", "java", "c", "cpp",
+    "h", "hpp", "cs", "php", "swift", "kt", "scala", "sh", "bash", "sql",
+    "html", "css", "scss", "less", "json", "yaml", "yml", "toml", "xml",
+    "dockerfile", "makefile", "gitignore", "env",
+  ].includes(ext);
+}
+
+export function isMarkdownFile(key: string) {
+  const ext = getFileExtension(key);
+  return ["md", "mdx"].includes(ext);
+}
+
+export function isTextFile(key: string) {
+  const ext = getFileExtension(key);
+  return [
+    "txt", "log", "csv", "tsv", "ini", "cfg", "conf",
+  ].includes(ext);
+}
