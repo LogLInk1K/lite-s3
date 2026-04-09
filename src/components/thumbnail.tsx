@@ -40,21 +40,21 @@ export function Thumbnail({ name, itemKey, size = "card", className }: Thumbnail
   if (!enabled) return null;
 
   const sizeClasses = size === "card"
-    ? "h-20 w-20 object-cover rounded"
+    ? "max-h-20 max-w-full object-contain rounded-lg"
     : "h-8 w-8 object-cover rounded shrink-0";
 
   const thumbSize = size === "card" ? 200 : 64;
   const src = visible ? `/api/files/thumbnail?key=${encodeURIComponent(itemKey)}&size=${thumbSize}` : undefined;
 
   return (
-    <div ref={ref} className={cn("relative overflow-hidden", size === "card" ? "h-20 w-20" : "h-8 w-8 shrink-0", className)}>
+    <div ref={ref} className={cn("relative overflow-hidden flex items-center justify-center", size === "card" ? "h-20 w-full" : "h-8 w-8 shrink-0", className)}>
       {visible && !error ? (
         isVideo ? (
           <div className="relative">
             <img
               src={src}
               alt=""
-              className={cn(sizeClasses, "bg-muted")}
+              className={cn(sizeClasses, "bg-surface-elevated")}
               loading="lazy"
               decoding="async"
               onLoad={() => setLoaded(true)}
@@ -62,7 +62,7 @@ export function Thumbnail({ name, itemKey, size = "card", className }: Thumbnail
             />
             {loaded && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-5 w-5 rounded-full bg-black/60 flex items-center justify-center">
+                <div className="h-6 w-6 rounded-full bg-black/60 flex items-center justify-center">
                   <svg className="h-3 w-3 text-white ml-0.5" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M8 5v14l11-7z" />
                   </svg>
@@ -74,7 +74,7 @@ export function Thumbnail({ name, itemKey, size = "card", className }: Thumbnail
           <img
             src={src}
             alt=""
-            className={cn(sizeClasses, "bg-muted")}
+            className={cn(sizeClasses, "bg-surface-elevated")}
             loading="lazy"
             decoding="async"
             onLoad={() => setLoaded(true)}
@@ -82,8 +82,8 @@ export function Thumbnail({ name, itemKey, size = "card", className }: Thumbnail
           />
         )
       ) : (
-        <div className={cn("flex items-center justify-center bg-muted rounded", sizeClasses)}>
-          <span className="text-[8px] text-muted-foreground uppercase">
+        <div className={cn("flex items-center justify-center rounded-lg", size === "card" ? "h-12 w-12" : "h-8 w-8", "bg-hover-bg")}>
+          <span className="text-[10px] text-text-tertiary uppercase font-medium">
             {name.split(".").pop()}
           </span>
         </div>

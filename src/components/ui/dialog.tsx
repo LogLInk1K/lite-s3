@@ -42,10 +42,13 @@ export function DialogContent({ children, className }: { children: React.ReactNo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/80" onClick={() => onOpenChange(false)} />
+      <div 
+        className="fixed inset-0 bg-overlay-primary backdrop-blur-sm transition-opacity" 
+        onClick={() => onOpenChange(false)} 
+      />
       <div
         className={cn(
-          "relative z-50 grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg rounded-lg animate-in fade-in-0 zoom-in-95",
+          "relative z-50 w-full border border-border-subtle bg-surface-elevated shadow-2xl rounded-xl animate-in fade-in-0 zoom-in-95 duration-200",
           className
         )}
       >
@@ -56,9 +59,50 @@ export function DialogContent({ children, className }: { children: React.ReactNo
 }
 
 export function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)} {...props} />;
+  return <div className={cn("flex flex-col space-y-1.5", className)} {...props} />;
 }
 
 export function DialogTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h2 className={cn("text-lg font-semibold leading-none tracking-tight", className)} {...props} />;
+  return (
+    <h2 
+      className={cn(
+        "text-base font-medium leading-tight tracking-tight text-text-primary",
+        className
+      )} 
+      {...props} 
+    />
+  );
+}
+
+export function DialogDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
+  return (
+    <p 
+      className={cn(
+        "text-sm text-text-secondary",
+        className
+      )} 
+      {...props} 
+    />
+  );
+}
+
+export function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div 
+      className={cn(
+        "flex items-center justify-end gap-2 pt-4",
+        className
+      )} 
+      {...props} 
+    />
+  );
+}
+
+export function DialogClose({ children, className }: { children: React.ReactNode; className?: string }) {
+  const { onOpenChange } = React.useContext(DialogContext);
+  return (
+    <div className={className} onClick={() => onOpenChange(false)}>
+      {children}
+    </div>
+  );
 }

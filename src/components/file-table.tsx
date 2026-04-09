@@ -3,7 +3,7 @@
 import { useFileStore, FileOrFolder } from "@/store/file-store";
 import { useFiles } from "@/hooks/use-files";
 import { useUpload } from "@/hooks/use-upload";
-import { FileCard } from "./file-card";
+import { FileCard, FileCardSkeleton } from "./file-card";
 import { FileListItem } from "./file-list-item";
 import { LayoutGrid, List, ChevronRight, ChevronLeft, Home, Loader2, Upload, X } from "lucide-react";
 import { Button } from "./ui/button";
@@ -136,8 +136,13 @@ export function FileTable() {
 
       <div className="flex-1 overflow-auto p-4 will-change-transform bg-bg-marketing">
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-brand-indigo" />
+          <div 
+            className="grid gap-4"
+            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}
+          >
+            {Array.from({ length: 12 }).map((_, i) => (
+              <FileCardSkeleton key={i} />
+            ))}
           </div>
         ) : error ? (
           <div className="flex items-center justify-center h-64">
@@ -152,7 +157,10 @@ export function FileTable() {
             <p className="text-sm mt-1">{t("files.dragDrop")}</p>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+          <div 
+            className="grid gap-4"
+            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}
+          >
             {pagedItems.map((item) => (
               <FileCard key={item.key} item={item} />
             ))}

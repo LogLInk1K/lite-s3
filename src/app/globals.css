@@ -82,6 +82,7 @@
   
   --overlay-primary: rgba(0, 0, 0, 0.5);
   --hover-bg: rgba(0, 0, 0, 0.04);
+  --shadow-inset: rgba(0, 0, 0, 0.1) 0px 0px 12px 0px inset;
 }
 
 .dark {
@@ -110,6 +111,7 @@
   
   --overlay-primary: rgba(0, 0, 0, 0.85);
   --hover-bg: rgba(255, 255, 255, 0.05);
+  --shadow-inset: rgba(0, 0, 0, 0.2) 0px 0px 12px 0px inset;
 }
 
 ::view-transition-old(root),
