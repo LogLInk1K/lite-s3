@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { createS3Client, getDefaultBucket } from "@/lib/s3";
+import { createS3Client, getDefaultBucket, getBucketConfig } from "@/lib/s3";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { ensureDatabase } from "@/lib/db";
 import sharp from "sharp";
@@ -111,7 +111,7 @@ export async function GET(request: Request) {
       });
     }
 
-    const bucket = await getDefaultBucket();
+    const bucket = bucketId ? await getBucketConfig(bucketId) : await getDefaultBucket();
     if (!bucket) {
       return NextResponse.json({ error: "No bucket configured" }, { status: 400 });
     }

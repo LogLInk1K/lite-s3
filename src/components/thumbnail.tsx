@@ -8,11 +8,12 @@ import { useState, useRef, useEffect } from "react";
 interface ThumbnailProps {
   name: string;
   itemKey: string;
+  bucketId?: string | null;
   size?: "card" | "list";
   className?: string;
 }
 
-export function Thumbnail({ name, itemKey, size = "card", className }: ThumbnailProps) {
+export function Thumbnail({ name, itemKey, bucketId, size = "card", className }: ThumbnailProps) {
   const enabled = isThumbnailable(name);
   const isVideo = isVideoFile(name);
   const [visible, setVisible] = useState(false);
@@ -44,7 +45,8 @@ export function Thumbnail({ name, itemKey, size = "card", className }: Thumbnail
     : "h-8 w-8 object-cover rounded shrink-0";
 
   const thumbSize = size === "card" ? 200 : 64;
-  const src = visible ? `/api/files/thumbnail?key=${encodeURIComponent(itemKey)}&size=${thumbSize}` : undefined;
+  const bucketParam = bucketId ? `&bucketId=${encodeURIComponent(bucketId)}` : "";
+  const src = visible ? `/api/files/thumbnail?key=${encodeURIComponent(itemKey)}&size=${thumbSize}${bucketParam}` : undefined;
 
   return (
     <div ref={ref} className={cn("relative overflow-hidden flex items-center justify-center", size === "card" ? "h-20 w-full" : "h-8 w-8 shrink-0", className)}>

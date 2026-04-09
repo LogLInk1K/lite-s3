@@ -12,7 +12,7 @@ interface FileCardProps {
 }
 
 export function FileCard({ item }: FileCardProps) {
-  const { navigateToFolder, setPreviewItem, selectedItems, toggleSelect, openContextMenu } = useFileStore();
+  const { navigateToFolder, setPreviewItem, selectedItems, toggleSelect, openContextMenu, currentBucketId } = useFileStore();
   const isSelected = selectedItems.has(item.key);
   const isFolder = item.type === "folder";
   const hasThumbnail = !isFolder && isThumbnailable(item.name);
@@ -75,7 +75,7 @@ export function FileCard({ item }: FileCardProps) {
           {isFolder ? (
             <FolderIcon className="h-12 w-12 text-brand-indigo" />
           ) : hasThumbnail ? (
-            <Thumbnail name={item.name} itemKey={item.key} size="card" />
+            <Thumbnail name={item.name} itemKey={item.key} bucketId={currentBucketId} size="card" />
           ) : (
             <FileIcon name={item.name} className="h-12 w-12 text-text-tertiary" />
           )}

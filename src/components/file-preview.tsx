@@ -19,6 +19,7 @@ export function FilePreview() {
   const isFile = previewItem?.type === "file";
   const fileItem = isFile ? (previewItem as FileItem) : null;
   const isImage = fileItem ? isImageFile(fileItem.name) : false;
+  const isVideo = fileItem ? isVideoFile(fileItem.name) : false;
 
   useEffect(() => {
     if (!fileItem) return;
@@ -89,6 +90,18 @@ export function FilePreview() {
     );
   }
 
+  if (isVideo) {
+    return (
+      <VideoLightbox 
+        fileKey={fileItem.key} 
+        fileName={fileItem.name}
+        bucketId={currentBucketId} 
+        onClose={handleClose}
+        onBackdropClick={handleBackdropClick}
+      />
+    );
+  }
+
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
@@ -116,8 +129,6 @@ export function FilePreview() {
             <div className="flex items-center justify-center h-full">
               <Loader2 className="h-6 w-6 animate-spin text-text-tertiary" />
             </div>
-          ) : isVideoFile(fileItem.name) ? (
-            <MediaPreview fileKey={fileItem.key} type="video" bucketId={currentBucketId} />
           ) : isAudioFile(fileItem.name) ? (
             <MediaPreview fileKey={fileItem.key} type="audio" bucketId={currentBucketId} />
           ) : isMarkdownFile(fileItem.name) && content ? (
@@ -178,7 +189,6 @@ function ImageLightbox({
   const imageRef = useRef<HTMLImageElement>(null);
   
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
-  const lastTapRef = useRef<number>(0);
   const initialPinchDistanceRef = useRef<number>(0);
   const initialScaleRef = useRef<number>(1);
 
@@ -201,17 +211,6 @@ function ImageLightbox({
     setRotation(0);
     setPosition({ x: 0, y: 0 });
     positionRef.current = { x: 0, y: 0 };
-  };
-
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (scale > 1) {
-      setScale(1);
-      setPosition({ x: 0, y: 0 });
-      positionRef.current = { x: 0, y: 0 };
-    } else {
-      setScale(2);
-    }
   };
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -244,19 +243,6 @@ function ImageLightbox({
     if (e.touches.length === 1) {
       const touch = e.touches[0];
       touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
-      
-      const now = Date.now();
-      if (now - lastTapRef.current < 300) {
-        e.preventDefault();
-        if (scale > 1) {
-          setScale(1);
-          setPosition({ x: 0, y: 0 });
-          positionRef.current = { x: 0, y: 0 };
-        } else {
-          setScale(2);
-        }
-      }
-      lastTapRef.current = now;
       
       if (scale > 1) {
         isDraggingRef.current = true;
@@ -373,7 +359,7 @@ function ImageLightbox({
         >
           <ZoomOut className="h-4 w-4" />
         </button>
-        <span className="text-sm min-w-[2.5rem] sm:min-w-[3rem] text-center" style={{ color: '#d0d6e0' }}>{Math.round(scale * 100)}%</span>
+        <span className="text-sm min-w-10 sm:min-w-12 text-center" style={{ color: '#d0d6e0' }}>{Math.round(scale * 100)}%</span>
         <button
           onClick={handleZoomIn}
           className="inline-flex items-center justify-center h-7 w-7 rounded-md transition-colors"
@@ -430,12 +416,11 @@ function ImageLightbox({
           style={{ 
             opacity: loaded ? 1 : 0,
             transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
-            cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in',
+            cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
             transition: isDragging ? 'none' : 'transform 0.2s ease, opacity 0.3s ease'
           }}
           onLoad={() => setLoaded(true)}
           onClick={(e) => e.stopPropagation()}
-          onDoubleClick={handleDoubleClick}
           onWheel={handleWheel}
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
@@ -448,7 +433,83 @@ function ImageLightbox({
   );
 }
 
-function MediaPreview({ fileKey, type, bucketId }: { fileKey: string; type: "video" | "audio"; bucketId?: string | null }) {
+function VideoLightbox({ 
+  fileKey, 
+  fileName,
+  bucketId, 
+  onClose,
+  onBackdropClick
+}: { 
+  fileKey: string; 
+  fileName: string;
+  bucketId?: string | null; 
+  onClose: () => void;
+  onBackdropClick: (e: React.MouseEvent) => void;
+}) {
+  const linkMutation = useFileLink();
+  const [url, setUrl] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setLoaded(false);
+    linkMutation.mutateAsync({ key: fileKey, bucketId }).then((result) => {
+      if (result.url) setUrl(result.url);
+    });
+  }, [fileKey, bucketId]);
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center select-none touch-none"
+      style={{ backgroundColor: 'rgba(8,9,10,0.92)' }}
+      onClick={onBackdropClick}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 z-10 inline-flex items-center justify-center h-9 w-9 rounded-full transition-colors"
+        style={{ 
+          color: '#f7f8f8',
+          backgroundColor: 'rgba(255,255,255,0.08)',
+          border: '1px solid rgba(255,255,255,0.1)'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'}
+        title="关闭 (Esc)"
+      >
+        <X className="h-4 w-4" />
+      </button>
+
+      <div 
+        className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-lg"
+        style={{ 
+          backgroundColor: 'rgba(25,26,27,0.9)',
+          border: '1px solid rgba(255,255,255,0.1)'
+        }}
+      >
+        <span className="text-sm truncate max-w-[200px] sm:max-w-[300px]" style={{ color: '#d0d6e0' }}>{fileName}</span>
+      </div>
+
+      {!loaded && (
+        <Loader2 className="absolute h-8 w-8 animate-spin" style={{ color: 'rgba(255,255,255,0.3)' }} />
+      )}
+      
+      {url && (
+        <video
+          src={url}
+          controls
+          className="max-w-[95vw] max-h-[90vh] rounded-lg"
+          style={{ 
+            opacity: loaded ? 1 : 0,
+            backgroundColor: '#0f1011'
+          }}
+          onLoadedData={() => setLoaded(true)}
+          onClick={(e) => e.stopPropagation()}
+        />
+      )}
+    </div>
+  );
+}
+
+function MediaPreview({ fileKey, type, bucketId }: { fileKey: string; type: "audio"; bucketId?: string | null }) {
   const linkMutation = useFileLink();
   const [url, setUrl] = useState<string | null>(null);
 
@@ -462,14 +523,6 @@ function MediaPreview({ fileKey, type, bucketId }: { fileKey: string; type: "vid
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-6 w-6 animate-spin text-text-tertiary" />
-      </div>
-    );
-  }
-
-  if (type === "video") {
-    return (
-      <div className="flex items-center justify-center h-full p-6 bg-surface-base">
-        <video src={url} controls className="max-w-full max-h-full rounded-lg" />
       </div>
     );
   }

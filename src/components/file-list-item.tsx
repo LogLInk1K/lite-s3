@@ -12,7 +12,7 @@ interface FileListItemProps {
 }
 
 export function FileListItem({ item }: FileListItemProps) {
-  const { navigateToFolder, setPreviewItem, selectedItems, toggleSelect, openContextMenu } = useFileStore();
+  const { navigateToFolder, setPreviewItem, selectedItems, toggleSelect, openContextMenu, currentBucketId } = useFileStore();
   const isSelected = selectedItems.has(item.key);
   const isFolder = item.type === "folder";
   const hasThumbnail = !isFolder && isThumbnailable(item.name);
@@ -71,7 +71,7 @@ export function FileListItem({ item }: FileListItemProps) {
       {isFolder ? (
         <FolderIcon className="h-5 w-5 text-brand-indigo shrink-0" />
       ) : hasThumbnail ? (
-        <Thumbnail name={item.name} itemKey={item.key} size="list" />
+        <Thumbnail name={item.name} itemKey={item.key} bucketId={currentBucketId} size="list" />
       ) : (
         <FileIcon name={item.name} className="h-5 w-5 text-text-tertiary shrink-0" />
       )}
