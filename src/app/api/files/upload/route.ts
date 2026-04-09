@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getPresignedUploadUrl, getDefaultBucket } from "@/lib/s3";
+import { uploadObject, getDefaultBucket } from "@/lib/s3";
 import { ensureDatabase } from "@/lib/db";
 
 export async function POST(request: Request) {
@@ -13,7 +13,14 @@ export async function POST(request: Request) {
   try {
     await ensureDatabase();
     
-    const { key, contentType, bucketId } = await request.json();
+    const formData = await request.formData();
+    const file = formData.get("file") as File | null;
+    const key = formData.get("key") as string | null;
+    const bucketId = formData.get("bucketId") as string | null;
+
+    if (!file) {
+      return NextResponse.json({ error: "File is required" }, { status: 400 });
+    }
 
     if (!key) {
       return NextResponse.json({ error: "Key is required" }, { status: 400 });
@@ -24,9 +31,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No bucket configured" }, { status: 400 });
     }
 
-    const url = await getPresignedUploadUrl(bucketId || bucket.id, key, contentType || "application/octet-stream");
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-    return NextResponse.json({ url, key });
+    await uploadObject(
+      bucketId || bucket.id,
+      key,
+      buffer,
+      file.type || "application/octet-stream"
+    );
+
+    return NextResponse.json({ success: true, key });
   } catch (error: any) {
     console.error("POST /api/files/upload error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -2,12 +2,14 @@
 
 import { useFileStore, FileOrFolder } from "@/store/file-store";
 import { useFiles } from "@/hooks/use-files";
+import { useUpload } from "@/hooks/use-upload";
 import { FileCard } from "./file-card";
 import { FileListItem } from "./file-list-item";
-import { LayoutGrid, List, ChevronRight, ChevronLeft, Home, Loader2, Upload } from "lucide-react";
+import { LayoutGrid, List, ChevronRight, ChevronLeft, Home, Loader2, Upload, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useRef } from "react";
 import { useTranslation } from "@/hooks/use-translation";
+import { cn, formatBytes } from "@/lib/utils";
 
 const PAGE_SIZE = 30;
 
@@ -17,6 +19,7 @@ export function FileTable() {
     navigateUp, setCurrentPrefix, setViewMode, setCurrentPage,
   } = useFileStore();
   const { data, isLoading, error } = useFiles(currentPrefix);
+  const { activeUploads, uploadFiles, removeUpload } = useUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
@@ -25,11 +28,15 @@ export function FileTable() {
     ...(data?.files || []),
   ];
 
+  const uniqueItems = allItems.filter((item, index, self) =>
+    index === self.findIndex((i) => i.key === item.key)
+  );
+
   const filteredItems = searchQuery
-    ? allItems.filter((item) =>
+    ? uniqueItems.filter((item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : allItems;
+    : uniqueItems;
 
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
@@ -111,7 +118,10 @@ export function FileTable() {
             multiple
             className="hidden"
             onChange={(e) => {
-              // Handled by DropZone
+              if (e.target.files) {
+                uploadFiles(e.target.files);
+                e.target.value = "";
+              }
             }}
           />
           <button

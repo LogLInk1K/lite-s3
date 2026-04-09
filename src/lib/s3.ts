@@ -260,3 +260,18 @@ export function getPublicUrl(config: BucketConfig, key: string): string | null {
   if (!config.publicUrl) return null;
   return `${config.publicUrl.replace(/\/$/, "")}/${key}`;
 }
+
+export async function uploadObject(bucketId: string, key: string, body: Buffer | Uint8Array, contentType: string) {
+  const config = await getBucketConfig(bucketId);
+  if (!config) throw new Error("Bucket not found");
+  
+  const client = createS3Client(config);
+  const command = new PutObjectCommand({
+    Bucket: config.bucketName,
+    Key: key,
+    Body: body,
+    ContentType: contentType,
+  });
+  
+  return client.send(command);
+}

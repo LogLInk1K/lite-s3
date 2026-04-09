@@ -1,25 +1,13 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useFileStore } from "@/store/file-store";
-import { useUploadFile } from "@/hooks/use-files";
+import { useUpload } from "@/hooks/use-upload";
 import { UploadCloud, X, Loader2 } from "lucide-react";
 import { cn, formatBytes } from "@/lib/utils";
-import { Button } from "./ui/button";
-
-interface UploadItem {
-  file: File;
-  key: string;
-  progress: number;
-  status: "pending" | "uploading" | "done" | "error";
-  error?: string;
-}
 
 export function DropZone() {
-  const { currentPrefix } = useFileStore();
-  const uploadMutation = useUploadFile();
+  const { activeUploads, uploadFiles, removeUpload } = useUpload();
   const [isDragging, setIsDragging] = useState(false);
-  const [uploads, setUploads] = useState<UploadItem[]>([]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -33,60 +21,6 @@ export function DropZone() {
     setIsDragging(false);
   }, []);
 
-  const uploadFile = async (file: File) => {
-    const key = currentPrefix + file.name;
-    const uploadItem: UploadItem = {
-      file,
-      key,
-      progress: 0,
-      status: "uploading",
-    };
-
-    setUploads((prev) => [...prev, uploadItem]);
-
-    try {
-      const { url } = await uploadMutation.mutateAsync({
-        key,
-        contentType: file.type || "application/octet-stream",
-      });
-
-      const xhr = new XMLHttpRequest();
-
-      await new Promise<void>((resolve, reject) => {
-        xhr.upload.addEventListener("progress", (e) => {
-          if (e.lengthComputable) {
-            const progress = Math.round((e.loaded / e.total) * 100);
-            setUploads((prev) =>
-              prev.map((u) => (u.key === key ? { ...u, progress } : u))
-            );
-          }
-        });
-
-        xhr.addEventListener("load", () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            setUploads((prev) =>
-              prev.map((u) => (u.key === key ? { ...u, status: "done", progress: 100 } : u))
-            );
-            resolve();
-          } else {
-            reject(new Error(`Upload failed: ${xhr.status}`));
-          }
-        });
-
-        xhr.addEventListener("error", () => reject(new Error("Upload failed")));
-        xhr.open("PUT", url);
-        xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
-        xhr.send(file);
-      });
-    } catch (error: any) {
-      setUploads((prev) =>
-        prev.map((u) =>
-          u.key === key ? { ...u, status: "error", error: error.message } : u
-        )
-      );
-    }
-  };
-
   const handleDrop = useCallback(
     async (e: React.DragEvent) => {
       e.preventDefault();
@@ -94,29 +28,10 @@ export function DropZone() {
       setIsDragging(false);
 
       const files = Array.from(e.dataTransfer.files);
-      for (const file of files) {
-        await uploadFile(file);
-      }
+      await uploadFiles(files);
     },
-    [currentPrefix]
+    [uploadFiles]
   );
-
-  const handleFileSelect = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files || []);
-      for (const file of files) {
-        await uploadFile(file);
-      }
-      e.target.value = "";
-    },
-    [currentPrefix]
-  );
-
-  const removeUpload = (key: string) => {
-    setUploads((prev) => prev.filter((u) => u.key !== key));
-  };
-
-  const activeUploads = uploads.filter((u) => u.status !== "done");
 
   return (
     <>
@@ -144,12 +59,12 @@ export function DropZone() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
             <span className="text-sm font-medium text-text-primary">上传中</span>
             <span className="text-xs text-text-tertiary">
-              {activeUploads.filter((u) => u.status === "done").length}/{uploads.length}
+              {activeUploads.filter((u) => u.status === "done").length}/{activeUploads.length}
             </span>
           </div>
           <div className="max-h-60 overflow-auto p-2">
             {activeUploads.map((upload) => (
-              <div key={upload.key} className="flex items-center gap-2 px-2 py-1.5">
+              <div key={upload.id} className="flex items-center gap-2 px-2 py-1.5">
                 {upload.status === "uploading" ? (
                   <Loader2 className="h-4 w-4 animate-spin text-brand-indigo flex-shrink-0" />
                 ) : upload.status === "error" ? (
@@ -169,7 +84,7 @@ export function DropZone() {
                     </span>
                   </div>
                 </div>
-                <button onClick={() => removeUpload(upload.key)} className="flex-shrink-0">
+                <button onClick={() => removeUpload(upload.id)} className="flex-shrink-0">
                   <X className="h-3 w-3 text-text-tertiary hover:text-text-primary" />
                 </button>
               </div>
