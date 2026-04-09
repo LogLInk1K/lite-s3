@@ -2,19 +2,13 @@
 
 import { useFileStore } from "@/store/file-store";
 import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Search, UploadCloud, Moon, Sun, LogOut, Server } from "lucide-react";
-import { useTheme } from "./theme-provider";
-import { useRef } from "react";
-import { signOut } from "next-auth/react";
-import { Tooltip } from "./ui/tooltip";
+import { Search } from "lucide-react";
 import Link from "next/link";
 import { BucketSelector } from "./bucket-selector";
+import { UserMenu } from "./user-menu";
 
 export function Navbar() {
   const { searchQuery, setSearchQuery } = useFileStore();
-  const { theme, setTheme } = useTheme();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <header className="sticky top-0 z-30 flex items-center gap-3 px-4 py-3 border-b border-border-subtle bg-bg-panel/95 backdrop-blur supports-backdrop-filter:bg-bg-panel/60">
@@ -38,53 +32,8 @@ export function Navbar() {
         />
       </div>
 
-      <div className="flex items-center gap-1">
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          className="hidden"
-          onChange={(e) => {
-            // Handled by DropZone
-          }}
-        />
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => fileInputRef.current?.click()}
-          className="h-8 w-8 rounded-lg"
-        >
-          <UploadCloud className="h-4 w-4" />
-        </Button>
-        <Link href="/buckets">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-lg"
-          >
-            <Server className="h-4 w-4" />
-          </Button>
-        </Link>
-        <Tooltip content="Toggle theme" side="bottom">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="h-8 w-8 rounded-lg"
-          >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
-        </Tooltip>
-        <Tooltip content="Sign out" side="bottom">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-            className="h-8 w-8 rounded-lg"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </Tooltip>
+      <div className="flex items-center">
+        <UserMenu />
       </div>
     </header>
   );

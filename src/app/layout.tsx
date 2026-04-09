@@ -7,8 +7,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "R2 Files",
-  description: "Personal file management system powered by Cloudflare R2",
+  title: "S3 Manager",
+  description: "Personal file management system for S3-compatible storage",
 };
 
 export default function RootLayout({

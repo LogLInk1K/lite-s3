@@ -4,8 +4,9 @@ import { useFileStore, FileOrFolder } from "@/store/file-store";
 import { useFiles } from "@/hooks/use-files";
 import { FileCard } from "./file-card";
 import { FileListItem } from "./file-list-item";
-import { LayoutGrid, List, ChevronRight, ChevronLeft, Home, Loader2 } from "lucide-react";
+import { LayoutGrid, List, ChevronRight, ChevronLeft, Home, Loader2, Upload } from "lucide-react";
 import { Button } from "./ui/button";
+import { useRef } from "react";
 
 const PAGE_SIZE = 30;
 
@@ -15,6 +16,7 @@ export function FileTable() {
     navigateUp, setCurrentPrefix, setViewMode, setCurrentPage,
   } = useFileStore();
   const { data, isLoading, error } = useFiles(currentPrefix);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const allItems: FileOrFolder[] = [
     ...(data?.folders || []),
@@ -82,23 +84,41 @@ export function FileTable() {
           })}
         </div>
 
-        <div className="flex items-center gap-1">
-          <Button
-            variant={viewMode === "grid" ? "secondary" : "ghost"}
-            size="icon"
-            onClick={() => setViewMode("grid")}
-            className="h-8 w-8 rounded-lg"
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 p-1 bg-surface-elevated rounded-lg border border-border-subtle">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`h-7 w-7 rounded-md flex items-center justify-center transition-colors ${
+                viewMode === "grid" ? "bg-hover-bg text-text-primary" : "text-text-tertiary hover:bg-hover-bg"
+              }`}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`h-7 w-7 rounded-md flex items-center justify-center transition-colors ${
+                viewMode === "list" ? "bg-hover-bg text-text-primary" : "text-text-tertiary hover:bg-hover-bg"
+              }`}
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              // Handled by DropZone
+            }}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-1.5 px-3 h-9 rounded-md bg-brand-indigo text-white text-sm font-medium hover:bg-accent-violet transition-colors"
           >
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === "list" ? "secondary" : "ghost"}
-            size="icon"
-            onClick={() => setViewMode("list")}
-            className="h-8 w-8 rounded-lg"
-          >
-            <List className="h-4 w-4" />
-          </Button>
+            <Upload className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Upload</span>
+          </button>
         </div>
       </div>
 

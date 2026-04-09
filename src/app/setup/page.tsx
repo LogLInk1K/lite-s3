@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Database, User, Check, AlertCircle, Loader2 } from "lucide-react";
+import { ThemeMenu } from "@/components/theme-menu";
 
 type Step = "database" | "admin" | "complete";
 
@@ -125,6 +126,9 @@ export default function SetupPage() {
 
   return (
     <div className="min-h-screen bg-bg-marketing flex items-center justify-center p-4">
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeMenu />
+      </div>
       <div className="w-full max-w-xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-medium text-text-primary tracking-tight mb-2">

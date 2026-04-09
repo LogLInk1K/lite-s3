@@ -40,8 +40,8 @@ export function SignInForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-      <div className="space-y-2">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-3">
         <Input
           type="text"
           placeholder="用户名"
@@ -49,7 +49,6 @@ export function SignInForm() {
           onChange={(e) => setUsername(e.target.value)}
           required
           autoComplete="username"
-          className="h-11"
         />
         <Input
           type="password"
@@ -58,7 +57,6 @@ export function SignInForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="current-password"
-          className="h-11"
         />
       </div>
 
