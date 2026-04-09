@@ -5,6 +5,7 @@ import { FileOrFolder, useFileStore } from "@/store/file-store";
 import { FileIcon, FolderIcon } from "./file-icon";
 import { Thumbnail } from "./thumbnail";
 import { isThumbnailable } from "@/hooks/use-thumbnail";
+import { Check } from "lucide-react";
 
 interface FileListItemProps {
   item: FileOrFolder;
@@ -16,7 +17,12 @@ export function FileListItem({ item }: FileListItemProps) {
   const isFolder = item.type === "folder";
   const hasThumbnail = !isFolder && isThumbnailable(item.name);
 
-  const handleClick = () => {
+  const handleRowClick = (e: React.MouseEvent) => {
+    toggleSelect(item.key);
+  };
+
+  const handleNameClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isFolder) {
       navigateToFolder(item.key);
     } else {
@@ -37,38 +43,47 @@ export function FileListItem({ item }: FileListItemProps) {
 
   return (
     <div
+      data-key={item.key}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors duration-150 hover:bg-hover-bg cursor-pointer",
-        isSelected && "bg-hover-bg ring-1 ring-brand-indigo/20"
+        "group flex items-center gap-3 px-3 py-2 rounded-md transition-colors duration-150 cursor-pointer",
+        !isSelected && "hover:bg-hover-bg",
+        isSelected && "bg-accent-violet/10"
       )}
       style={{ contentVisibility: "auto", containIntrinsicSize: "auto 40px" }}
-      onClick={handleClick}
+      onClick={handleRowClick}
       onContextMenu={handleContextMenu}
     >
       <div onClick={handleSelect}>
         <div
           className={cn(
-            "h-4 w-4 rounded border transition-colors shrink-0",
-            isSelected ? "bg-brand-indigo border-brand-indigo" : "border-text-quaternary/30"
+            "h-5 w-5 rounded transition-all duration-150 flex items-center justify-center shrink-0",
+            isSelected 
+              ? "bg-accent-violet border-2 border-accent-violet" 
+              : "bg-white dark:bg-surface-elevated border-2 border-gray-300 dark:border-gray-500 opacity-0 group-hover:opacity-100"
           )}
         >
           {isSelected && (
-            <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+            <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
           )}
         </div>
       </div>
 
       {isFolder ? (
-        <FolderIcon className="h-5 w-5 text-blue-500 shrink-0" />
+        <FolderIcon className="h-5 w-5 text-brand-indigo shrink-0" />
       ) : hasThumbnail ? (
         <Thumbnail name={item.name} itemKey={item.key} size="list" />
       ) : (
         <FileIcon name={item.name} className="h-5 w-5 text-text-tertiary shrink-0" />
       )}
 
-      <span className="flex-1 text-sm truncate text-text-primary">{item.name}</span>
+      <div className="flex-1 min-w-0 flex items-center">
+        <span 
+          className="text-sm truncate text-text-primary hover:text-accent-violet transition-colors cursor-pointer inline-block"
+          onClick={handleNameClick}
+        >
+          {item.name}
+        </span>
+      </div>
 
       {!isFolder && "size" in item && (
         <span className="text-xs text-text-tertiary w-20 text-right shrink-0">

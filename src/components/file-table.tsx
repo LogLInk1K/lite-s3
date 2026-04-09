@@ -3,11 +3,13 @@
 import { useFileStore, FileOrFolder } from "@/store/file-store";
 import { useFiles } from "@/hooks/use-files";
 import { useUpload } from "@/hooks/use-upload";
+import { useSelectionBox } from "@/hooks/use-selection-box";
+import { useDeleteFile, useFileLink } from "@/hooks/use-files";
 import { FileCard, FileCardSkeleton } from "./file-card";
 import { FileListItem } from "./file-list-item";
-import { LayoutGrid, List, ChevronRight, ChevronLeft, Home, Loader2, Upload, X } from "lucide-react";
+import { LayoutGrid, List, ChevronRight, ChevronLeft, Home, Loader2, Upload, X, Download, Move, Copy, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn, formatBytes } from "@/lib/utils";
 
@@ -17,11 +19,30 @@ export function FileTable() {
   const {
     currentPrefix, pathStack, searchQuery, viewMode, currentPage,
     navigateUp, setCurrentPrefix, setViewMode, setCurrentPage,
+    setSelectedItems, selectedItems, clearSelection,
   } = useFileStore();
   const { data, isLoading, error } = useFiles(currentPrefix);
   const { activeUploads, uploadFiles, removeUpload } = useUpload();
+  const deleteMutation = useDeleteFile();
+  const linkMutation = useFileLink();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
+
+  const selectedCount = selectedItems.size;
+
+  const handleSelectionChange = useCallback(
+    (selectedKeys: Set<string>) => {
+      setSelectedItems(selectedKeys);
+    },
+    [setSelectedItems]
+  );
+
+  const { selectionBox } = useSelectionBox({
+    containerRef,
+    itemSelectors: "[data-key]",
+    onSelectionChange: handleSelectionChange,
+  });
 
   const allItems: FileOrFolder[] = [
     ...(data?.folders || []),
@@ -43,6 +64,33 @@ export function FileTable() {
   const pagedItems = filteredItems.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const pathParts = currentPrefix.split("/").filter(Boolean);
+
+  const handleBatchDownload = async () => {
+    const keys = Array.from(selectedItems);
+    for (const key of keys) {
+      const result = await linkMutation.mutateAsync({ key });
+      if (result.url) {
+        window.open(result.url, "_blank");
+      }
+    }
+  };
+
+  const handleBatchDelete = () => {
+    const keys = Array.from(selectedItems);
+    const itemNames = keys.map(key => key.split("/").filter(Boolean).pop()).join(", ");
+    if (confirm(`确定要删除选中的 ${keys.length} 个项目吗？\n${itemNames}`)) {
+      keys.forEach(key => deleteMutation.mutate(key));
+      clearSelection();
+    }
+  };
+
+  const handleBatchMove = () => {
+    alert("批量移动功能开发中");
+  };
+
+  const handleBatchCopy = () => {
+    alert("批量复制功能开发中");
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -134,7 +182,65 @@ export function FileTable() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-4 will-change-transform bg-bg-marketing">
+      <div 
+        className={cn(
+          "flex items-center gap-2 px-4 bg-surface-elevated border-b border-border-subtle overflow-hidden transition-all duration-200 ease-out",
+          selectedCount > 0 ? "max-h-14 py-2 opacity-100" : "max-h-0 py-0 opacity-0 border-b-0"
+        )}
+      >
+        <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-accent-violet/10">
+          <span className="text-sm text-accent-violet font-medium">
+            {selectedCount}
+          </span>
+        </div>
+        <span className="text-sm text-text-secondary">
+          {t("files.selected")}
+        </span>
+        <div className="flex-1" />
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleBatchDownload}
+            className="flex items-center gap-1.5 px-2.5 h-7 rounded-md text-xs text-text-secondary hover:text-text-primary hover:bg-hover-bg transition-colors"
+          >
+            <Download className="h-3.5 w-3.5" />
+            <span>{t("files.download")}</span>
+          </button>
+          <button
+            onClick={handleBatchMove}
+            className="flex items-center gap-1.5 px-2.5 h-7 rounded-md text-xs text-text-secondary hover:text-text-primary hover:bg-hover-bg transition-colors"
+          >
+            <Move className="h-3.5 w-3.5" />
+            <span>{t("files.move")}</span>
+          </button>
+          <button
+            onClick={handleBatchCopy}
+            className="flex items-center gap-1.5 px-2.5 h-7 rounded-md text-xs text-text-secondary hover:text-text-primary hover:bg-hover-bg transition-colors"
+          >
+            <Copy className="h-3.5 w-3.5" />
+            <span>{t("files.copy")}</span>
+          </button>
+          <button
+            onClick={handleBatchDelete}
+            className="flex items-center gap-1.5 px-2.5 h-7 rounded-md text-xs text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            <span>{t("files.delete")}</span>
+          </button>
+        </div>
+        <div className="w-px h-4 bg-border-subtle mx-1" />
+        <button
+          onClick={clearSelection}
+          className="flex items-center justify-center h-7 w-7 rounded-md text-text-tertiary hover:text-text-primary hover:bg-hover-bg transition-colors"
+          title={t("files.clearSelection")}
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      <div 
+        ref={containerRef}
+        className="flex-1 overflow-auto p-4 will-change-transform bg-bg-marketing relative select-none"
+      >
         {isLoading ? (
           <div 
             className="grid gap-4"
@@ -166,7 +272,7 @@ export function FileTable() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3 px-3 py-2 text-xs text-text-quaternary border-b border-border-subtle">
               <div className="w-4" />
               <div className="h-5 w-5" />
@@ -178,6 +284,18 @@ export function FileTable() {
               <FileListItem key={item.key} item={item} />
             ))}
           </div>
+        )}
+
+        {selectionBox && (
+          <div
+            className="absolute bg-accent-violet/20 border border-accent-violet pointer-events-none"
+            style={{
+              left: Math.min(selectionBox.startX, selectionBox.endX),
+              top: Math.min(selectionBox.startY, selectionBox.endY),
+              width: Math.abs(selectionBox.endX - selectionBox.startX),
+              height: Math.abs(selectionBox.endY - selectionBox.startY),
+            }}
+          />
         )}
       </div>
 

@@ -38,6 +38,7 @@ export function FileCard({ item }: FileCardProps) {
 
   return (
     <div
+      data-key={item.key}
       className={cn(
         "group relative rounded-lg p-4 cursor-pointer transition-all duration-150",
         "bg-surface-elevated border border-transparent",
@@ -57,14 +58,14 @@ export function FileCard({ item }: FileCardProps) {
       >
         <div
           className={cn(
-            "h-4 w-4 rounded transition-all duration-150 flex items-center justify-center",
+            "h-5 w-5 rounded transition-all duration-150 flex items-center justify-center",
             isSelected 
-              ? "bg-accent-violet border border-accent-violet" 
-              : "border border-border-subtle opacity-0 group-hover:opacity-100 hover:border-border-standard"
+              ? "bg-accent-violet border-2 border-accent-violet" 
+              : "bg-white dark:bg-surface-elevated border-2 border-gray-300 dark:border-gray-500 opacity-0 group-hover:opacity-100"
           )}
         >
           {isSelected && (
-            <Check className="h-3 w-3 text-white" strokeWidth={3} />
+            <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
           )}
         </div>
       </div>

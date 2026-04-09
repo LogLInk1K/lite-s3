@@ -31,6 +31,7 @@ interface FileStore {
   navigateUp: () => void;
   setSearchQuery: (query: string) => void;
   toggleSelect: (key: string) => void;
+  setSelectedItems: (keys: Set<string>) => void;
   clearSelection: () => void;
   setPreviewItem: (item: FileOrFolder | null) => void;
   setViewMode: (mode: "grid" | "list") => void;
@@ -88,6 +89,8 @@ export const useFileStore = create<FileStore>((set, get) => ({
     }
     set({ selectedItems: newSet });
   },
+
+  setSelectedItems: (keys) => set({ selectedItems: keys }),
 
   clearSelection: () => set({ selectedItems: new Set<string>() }),
 
