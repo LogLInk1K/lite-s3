@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { flushSync } from "react-dom";
 
-type Theme = "light" | "dark";
+type Theme = "light" | "dark" | "system";
 
 interface ThemeContextValue {
   theme: Theme;
@@ -11,7 +11,7 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: "dark",
+  theme: "system",
   setTheme: () => {},
 });
 
@@ -20,37 +20,40 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("dark");
+  const [theme, setThemeState] = useState<Theme>("system");
   const [mounted, setMounted] = useState(false);
+
+  const applyTheme = useCallback((themeToApply: "light" | "dark") => {
+    const root = document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(themeToApply);
+  }, []);
 
   useEffect(() => {
     const stored = localStorage.getItem("theme") as Theme | null;
-    if (stored === "light" || stored === "dark") {
+    if (stored === "light" || stored === "dark" || stored === "system") {
       setThemeState(stored);
-    } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
-      setThemeState("light");
     }
     setMounted(true);
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
-    const root = document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(theme);
-    localStorage.setItem("theme", theme);
-  }, [theme, mounted]);
 
-  const setTheme = useCallback((newTheme: Theme) => {
     const root = document.documentElement;
+    let effectiveTheme: "light" | "dark";
+
+    if (theme === "system") {
+      effectiveTheme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    } else {
+      effectiveTheme = theme;
+    }
 
     if (document.startViewTransition) {
       const transition = document.startViewTransition(() => {
         flushSync(() => {
-          root.classList.remove("light", "dark");
-          root.classList.add(newTheme);
-          localStorage.setItem("theme", newTheme);
-          setThemeState(newTheme);
+          applyTheme(effectiveTheme);
+          localStorage.setItem("theme", theme);
         });
       });
       transition.ready.then(() => {
@@ -59,11 +62,28 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       });
     } else {
       root.classList.add("theme-transition");
-      setThemeState(newTheme);
+      applyTheme(effectiveTheme);
+      localStorage.setItem("theme", theme);
       setTimeout(() => {
         root.classList.remove("theme-transition");
       }, 300);
     }
+  }, [theme, mounted, applyTheme]);
+
+  useEffect(() => {
+    if (theme !== "system") return;
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    const handleChange = (e: MediaQueryListEvent) => {
+      applyTheme(e.matches ? "light" : "dark");
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [theme, applyTheme]);
+
+  const setTheme = useCallback((newTheme: Theme) => {
+    setThemeState(newTheme);
   }, []);
 
   return (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { ChevronDown, Server, Check, Loader2 } from "lucide-react";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface Bucket {
   id: string;
@@ -16,6 +17,7 @@ interface BucketSelectorProps {
 }
 
 export function BucketSelector({ currentBucketId, onBucketChange }: BucketSelectorProps) {
+  const { t } = useTranslation();
   const [buckets, setBuckets] = useState<Bucket[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
@@ -112,7 +114,7 @@ export function BucketSelector({ currentBucketId, onBucketChange }: BucketSelect
               href="/buckets"
               className="block px-3 py-2 text-sm text-text-tertiary hover:bg-hover-bg hover:text-text-secondary rounded-md transition-colors"
             >
-              Manage Buckets
+              {t("buckets.manageBuckets")}
             </a>
           </div>
         </div>

@@ -60,7 +60,7 @@ export function FileTable() {
             }}
             className="hover:text-text-primary transition-colors whitespace-nowrap"
           >
-            Root
+            {t("files.root")}
           </button>
           {pathParts.map((part, index) => {
             const prefix = pathParts.slice(0, index + 1).join("/") + "/";
