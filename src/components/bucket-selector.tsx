@@ -250,11 +250,11 @@ export function BucketSelector({ currentBucketId, onBucketChange }: BucketSelect
       <div ref={dropdownRef} className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-hover-bg hover:bg-surface-elevated transition-colors text-sm"
+          className="flex items-center gap-2 px-3 h-9 rounded-lg bg-hover-bg hover:bg-surface-elevated transition-colors text-sm"
         >
           <Server className="w-4 h-4 text-brand-indigo" />
           <span className="text-text-primary">{currentBucket?.name || "Select Bucket"}</span>
-          <ChevronDown className={`w-4 h-4 text-text-tertiary transition-transform ${isOpen ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-4 h-4 text-text-tertiary transition-transform ${isOpen ? "rotate-0" : "rotate-90"}`} />
         </button>
 
         {isOpen && (
