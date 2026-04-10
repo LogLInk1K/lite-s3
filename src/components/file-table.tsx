@@ -11,7 +11,7 @@ import { NewFolderDialog } from "./dialogs/new-folder-dialog";
 import { RenameDialog } from "./dialogs/rename-dialog";
 import { MoveCopyDialog } from "./dialogs/move-copy-dialog";
 import { DeleteProgressDialog } from "./dialogs/delete-progress-dialog";
-import { LayoutGrid, List, ChevronRight, ChevronLeft, HardDrive, Upload, X, Download, Move, Copy, Trash2, FolderPlus, RotateCw } from "lucide-react";
+import { LayoutGrid, List, ChevronRight, ChevronLeft, HardDrive, Upload, X, Download, Move, Copy, Trash2, FolderPlus, RotateCw, ChevronDown } from "lucide-react";
 import { Button } from "./ui/button";
 import { useRef, useCallback, useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/use-translation";
@@ -42,6 +42,18 @@ export function FileTable() {
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [rotation, setRotation] = useState(0);
+  const [showPathDropdown, setShowPathDropdown] = useState(false);
+  const pathDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (pathDropdownRef.current && !pathDropdownRef.current.contains(e.target as Node)) {
+        setShowPathDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
@@ -133,38 +145,90 @@ export function FileTable() {
           <HardDrive className="h-4 w-4" />
         </Button>
 
-        <div className="flex items-center gap-1 text-sm text-text-quaternary overflow-x-auto flex-1">
-          <button
-            onClick={() => {
-              setCurrentPrefix("");
-              useFileStore.setState({ pathStack: [], currentPage: 1 });
-            }}
-            className="hover:text-text-primary transition-colors whitespace-nowrap"
-          >
-            {t("files.root")}
-          </button>
-          {pathParts.map((part, index) => {
-            const prefix = pathParts.slice(0, index + 1).join("/") + "/";
-            return (
-              <span key={prefix} className="flex items-center gap-1 whitespace-nowrap">
-                <ChevronRight className="h-3 w-3" />
-                <button
-                  onClick={() => {
-                    setCurrentPrefix(prefix);
-                    useFileStore.setState({
-                      pathStack: pathParts.slice(0, index).map((_, i) =>
-                        pathParts.slice(0, i).join("/") + "/"
-                      ).filter(Boolean),
-                      currentPage: 1,
-                    });
-                  }}
-                  className="hover:text-text-primary transition-colors"
-                >
-                  {part}
-                </button>
+        <div className="flex items-center gap-1 text-sm text-text-quaternary flex-1 min-w-0">
+          <div className="hidden md:flex items-center gap-1 overflow-x-auto scrollbar-hide">
+            <button
+              onClick={() => {
+                setCurrentPrefix("");
+                useFileStore.setState({ pathStack: [], currentPage: 1 });
+              }}
+              className="hover:text-text-primary transition-colors whitespace-nowrap shrink-0"
+            >
+              {t("files.root")}
+            </button>
+            {pathParts.map((part, index) => {
+              const prefix = pathParts.slice(0, index + 1).join("/") + "/";
+              return (
+                <span key={prefix} className="flex items-center gap-1 whitespace-nowrap shrink-0">
+                  <ChevronRight className="h-3 w-3" />
+                  <button
+                    onClick={() => {
+                      setCurrentPrefix(prefix);
+                      useFileStore.setState({
+                        pathStack: pathParts.slice(0, index).map((_, i) =>
+                          pathParts.slice(0, i).join("/") + "/"
+                        ).filter(Boolean),
+                        currentPage: 1,
+                      });
+                    }}
+                    className="hover:text-text-primary transition-colors"
+                  >
+                    {part}
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+
+          <div ref={pathDropdownRef} className="relative md:hidden flex-1 min-w-0">
+            <button
+              onClick={() => setShowPathDropdown(!showPathDropdown)}
+              className="flex items-center gap-1 text-text-primary hover:text-text-primary transition-colors truncate w-full text-left"
+            >
+              <span className="truncate">
+                {pathParts.length > 0 ? pathParts[pathParts.length - 1] : t("files.root")}
               </span>
-            );
-          })}
+              <ChevronDown className={`h-3 w-3 shrink-0 transition-transform ${showPathDropdown ? "rotate-180" : ""}`} />
+            </button>
+            {showPathDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-surface-elevated rounded-lg border border-border-subtle shadow-lg z-50 min-w-48 max-w-64">
+                <div className="py-1 max-h-64 overflow-y-auto">
+                  <button
+                    onClick={() => {
+                      setCurrentPrefix("");
+                      useFileStore.setState({ pathStack: [], currentPage: 1 });
+                      setShowPathDropdown(false);
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-hover-bg transition-colors text-text-primary"
+                  >
+                    {t("files.root")}
+                  </button>
+                  {pathParts.map((part, index) => {
+                    const prefix = pathParts.slice(0, index + 1).join("/") + "/";
+                    return (
+                      <button
+                        key={prefix}
+                        onClick={() => {
+                          setCurrentPrefix(prefix);
+                          useFileStore.setState({
+                            pathStack: pathParts.slice(0, index).map((_, i) =>
+                              pathParts.slice(0, i).join("/") + "/"
+                            ).filter(Boolean),
+                            currentPage: 1,
+                          });
+                          setShowPathDropdown(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-hover-bg transition-colors text-text-secondary"
+                      >
+                        <span className="text-text-quaternary mr-1">{"  ".repeat(index)}</span>
+                        {part}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">

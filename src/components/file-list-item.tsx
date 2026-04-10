@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { cn, formatBytes, formatDate } from "@/lib/utils";
 import { FileOrFolder, useFileStore } from "@/store/file-store";
 import { FileIcon, FolderIcon } from "./file-icon";
@@ -16,6 +17,11 @@ export function FileListItem({ item }: FileListItemProps) {
   const isSelected = selectedItems.has(item.key);
   const isFolder = item.type === "folder";
   const hasThumbnail = !isFolder && isThumbnailable(item.name);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    setIsTouchDevice(window.matchMedia("(pointer: coarse)").matches);
+  }, []);
 
   const handleRowClick = (e: React.MouseEvent) => {
     toggleSelect(item.key);
@@ -59,7 +65,8 @@ export function FileListItem({ item }: FileListItemProps) {
             "h-5 w-5 rounded transition-all duration-150 flex items-center justify-center shrink-0",
             isSelected 
               ? "bg-accent-violet border-2 border-accent-violet" 
-              : "bg-white dark:bg-surface-elevated border-2 border-gray-300 dark:border-gray-500 opacity-0 group-hover:opacity-100"
+              : "bg-white dark:bg-surface-elevated border-2 border-gray-300 dark:border-gray-500",
+            !isTouchDevice && !isSelected && "opacity-0 group-hover:opacity-100"
           )}
         >
           {isSelected && (

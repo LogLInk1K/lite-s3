@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { cn, formatBytes } from "@/lib/utils";
 import { FileOrFolder, useFileStore } from "@/store/file-store";
 import { FileIcon, FolderIcon } from "./file-icon";
@@ -16,6 +17,11 @@ export function FileCard({ item }: FileCardProps) {
   const isSelected = selectedItems.has(item.key);
   const isFolder = item.type === "folder";
   const hasThumbnail = !isFolder && isThumbnailable(item.name);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    setIsTouchDevice(window.matchMedia("(pointer: coarse)").matches);
+  }, []);
 
   const handleClick = () => {
     if (isFolder) {
@@ -41,8 +47,8 @@ export function FileCard({ item }: FileCardProps) {
       data-key={item.key}
       className={cn(
         "group relative rounded-lg p-4 cursor-pointer transition-all duration-150",
-        "bg-surface-elevated border border-transparent",
-        !isSelected && "hover:bg-hover-bg hover:border-border-subtle",
+        "bg-surface-elevated/50 border border-transparent",
+        !isSelected && "hover:bg-hover-bg/50 hover:border-border-subtle",
         isSelected && "bg-accent-violet/10 border-accent-violet/50"
       )}
       style={{ 
@@ -61,7 +67,8 @@ export function FileCard({ item }: FileCardProps) {
             "h-5 w-5 rounded transition-all duration-150 flex items-center justify-center",
             isSelected 
               ? "bg-accent-violet border-2 border-accent-violet" 
-              : "bg-white dark:bg-surface-elevated border-2 border-gray-300 dark:border-gray-500 opacity-0 group-hover:opacity-100"
+              : "bg-white dark:bg-surface-elevated border-2 border-gray-300 dark:border-gray-500",
+            !isTouchDevice && !isSelected && "opacity-0 group-hover:opacity-100"
           )}
         >
           {isSelected && (
